@@ -1,0 +1,29 @@
+name: Publier Manche Visuel
+
+# Crée ou met à jour la release « manche-visuel » avec l'APK déposé dans manche-visuel/.
+# Utilise le jeton intégré du dépôt : aucun secret à configurer.
+on:
+  push:
+    branches: [main]
+    paths: ["manche-visuel/MancheVisuel.apk"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publier la release manche-visuel
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: manche-visuel
+        run: |
+          notes="Dernière version de Manche Visuel (visualiseur de manche pour guitare et basse), publiée le $(date -u '+%Y-%m-%d %H:%M') UTC."
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --title "Manche Visuel" --notes "$notes" --latest=false
+          fi
+          gh release upload "$TAG" manche-visuel/MancheVisuel.apk --clobber
+          gh release edit "$TAG" --notes "$notes"
